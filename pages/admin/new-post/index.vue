@@ -1,59 +1,45 @@
 <template>
   <div class="admin-new-post-page">
     <section class="new-post-form">
-      <form @submit.prevent="onSave">
-        <AppControlInput v-model="editedPost.author">Author Name</AppControlInput>
-
-        <AppControlInput v-model="editedPost.title">Title</AppControlInput>
-
-        <AppControlInput v-model="editedPost.thumbnailLink">Thumbnail Link</AppControlInput>
-
-        <AppControlInput
-                  control-type="textarea"
-                  v-model="editedPost.content">Content</AppControlInput>
-
-        <AppButton type="submit">Save</AppButton>
-
-        <AppButton
-                  type="button"
-                  style="margin-left: 10px"
-                  btn-style="cancel"
-                  @click="onCancel">Cancel</AppButton>
-      </form>
+      <AdminPostForm :post="loadedPost" />
     </section>
   </div>
 </template>
 
 
 <script>
-import AppControlInput from '@/components/UI/AppControlInput'
-import AppButton from '@/components/UI/AppButton'
+import AdminPostForm from '@/components/Admin/AdminPostForm'
 
 export default {
+  layout: 'admin',
   components: {
-    AppControlInput,
-    AppButton
+    AdminPostForm
   },
   data() {
     return {
-      editedPost: {
-      author: '',
-      title: '',
-      thumbnailLink: '',
-      content: ''
+        loadedPost: {
+        author: 'Zanin',
+        title: 'My title',
+        content: 'amazing content!!!',
+        thumbnailLink: 'https://scontent.fiev15-1.fna.fbcdn.net/v/t31.0-8/12698273_1685993638346339_1851182126284243223_o.jpg?_nc_cat=0&oh=2f5c31e35b9b79ad7fad5b83213cbd56&oe=5C1089E5'
       }
-    }
-  },
-  methods: {
-    onSave() {
-      // Save the post
-      console.log(this.editedPost)
-    },
-    onCancel() {
-      // Navigate back
-      this.$router.push('/admin');
     }
   }
 }
 </script>
+
+
+<style scoped>
+.new-post-form {
+  width: 90%;
+  margin: 20px auto;
+}
+
+@media (min-width: 768px) {
+  .new-post-form {
+    width: 500px;
+  }
+}
+</style>
+
 
