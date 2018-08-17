@@ -19,17 +19,17 @@ export default {
     return axios.get(`https://nuxt-blog-d548f.firebaseio.com/posts/${context.params.postId}.json`)
       .then(response => {
         return {
-          loadedPost: response.data
+          loadedPost: { ...response.data, id: context.params.postId }
         }
       })
       .catch(e => context.error(e))
   },
   methods: {
     onSubmitted(editedPost) {
-      console.log('this.$route.params.postId', this.$route.params.postId)
-      axios.put(`https://nuxt-blog-d548f.firebaseio.com/posts/${this.$route.params.postId}.json`, editedPost)
-      .then(response => console.log(response))
-      .catch(e => console.log(e))
+      this.$store.dispatch('editPost', editedPost)
+        .then(() => {
+          this.$router.push('/admin')
+        })
     }
   }
 }

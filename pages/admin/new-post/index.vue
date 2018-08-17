@@ -28,16 +28,10 @@ export default {
   // },
   methods: {
     onSumbmitted(postData) {
-      axios.post('https://nuxt-blog-d548f.firebaseio.com/posts.json', {
-        ...postData,
-        updatedDate: new Date()
-      })
-      .then(result => {
-        console.log('result', result)
-      })
-      .catch(e => {
-        console.log(e)
-      })
+      this.$store.dispatch('addPost', postData)
+        .then(() => {
+          this.$router.push('/admin')
+        })
     }
   }
 }
