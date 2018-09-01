@@ -22,6 +22,9 @@ const createStore = () => {
       },
       setToken(state, token) {
         state.token = token
+      },
+      clearToken(state) {
+        state.token = null
       }
     },
     actions: {
@@ -40,27 +43,27 @@ const createStore = () => {
       setPosts({ commit }, posts) {
         commit('setPosts', posts)
       },
-      editPost({ commit }, editedPost) {
-        return this.$axios.$put(`/posts/${editedPost.id}.json`, editedPost)
+      editPost(vuexContext, editedPost) {
+        return this.$axios.$put(`/posts/${editedPost.id}.json?auth=${vuexContext.state.token}`, editedPost)
           .then(() => {
-            commit('editPost', editedPost)
+            vuexContext.commit('editPost', editedPost)
           })
           .catch(e => console.error(e))
       },
-      addPost({ commit }, post) {
+      addPost(vuexContext, post) {
         const createdPost = {
           ...post,
           updatedDate: new Date()
         }
-        return this.$axios.$post('/posts.json', createdPost)
+        return this.$axios.$post(`/posts.json?auth=${vuexContext.state.token}`, createdPost)
           .then(data => {
-            commit('addPost', { ...createdPost, id: data.name })
+            vuexContext.commit('addPost', { ...createdPost, id: data.name })
           })
           .catch(e => {
             console.error(e)
           })
       },
-      authenticateUser({ commit }, authData) {
+      authenticateUser(vuexContext, authData) {
         let authUrl = authData.isLogin
           ? `https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${process.env.fbAPIKey}`
           : `https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=${process.env.fbAPIKey}`
@@ -70,13 +73,34 @@ const createStore = () => {
           password: authData.password,
           returnSecureToken: true
         }).then(result => {
-          commit('setToken', result.idToken)
+          vuexContext.commit('setToken', result.idToken)
+          localStorage.setItem('token', result.idToken)
+          localStorage.setItem('tokenExpiration', new Date().getTime() + result.expiresIn * 1000)
+          vuexContext.dispatch('setLogoutTimer', result.expiresIn * 1000)
         })
           .catch(e => console.error(e))
+      },
+      setLogoutTimer({ commit }, duration) {
+        setTimeout(() => {
+          commit('clearToken')
+        }, duration)
+      },
+      initAuth(vuexContext) {
+        const token = localStorage.getItem('token')
+        const expirationDate = localStorage.getItem('tokenExpiration')
+
+        if (new Date().getTime() > +expirationDate || !token) {
+          return;
+        }
+        vuexContext.dispatch('setLogoutTimer', +expirationDate - new Date().getTime())
+        vuexContext.commit('setToken', token)
       }
     },
     getters: {
-      loadedPosts: state => state.loadedPosts
+      loadedPosts: state => state.loadedPosts,
+      isAuthenticated(state) {
+        return state.token !== null
+      }
     }
   })
 }
