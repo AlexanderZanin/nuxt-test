@@ -1,10 +1,11 @@
+import axios from 'axios';
 import Vuex from 'vuex'
-import axios from 'axios'
 
 const createStore = () => {
   return new Vuex.Store({
     state: {
-      loadedPosts: []
+      loadedPosts: [],
+      token: null
     },
     mutations: {
       setPosts(state, posts) {
@@ -18,15 +19,19 @@ const createStore = () => {
           post => post.id === editedPost.id
         );
         state.loadedPosts[postIndex] = editedPost
+      },
+      setToken(state, token) {
+        state.token = token
       }
     },
     actions: {
       nuxtServerInit({ commit }, context) {
-        return axios.get('https://nuxt-blog-d548f.firebaseio.com/posts.json')
-          .then(response => {
+        return context.app.$axios
+          .$get('/posts.json')
+          .then(data => {
             const postsArray = [];
-            for (const key in response.data) {
-              postsArray.push({ ...response.data[key], id: key });
+            for (const key in data) {
+              postsArray.push({ ...data[key], id: key });
             }
             commit('setPosts', postsArray);
           })
@@ -36,7 +41,7 @@ const createStore = () => {
         commit('setPosts', posts)
       },
       editPost({ commit }, editedPost) {
-        return axios.put(`https://nuxt-blog-d548f.firebaseio.com/posts/${editedPost.id}.json`, editedPost)
+        return this.$axios.$put(`/posts/${editedPost.id}.json`, editedPost)
           .then(() => {
             commit('editPost', editedPost)
           })
@@ -47,13 +52,27 @@ const createStore = () => {
           ...post,
           updatedDate: new Date()
         }
-        return axios.post('https://nuxt-blog-d548f.firebaseio.com/posts.json', createdPost)
-          .then(result => {
-            commit('addPost', { ...createdPost, id: result.data.name })
+        return this.$axios.$post('/posts.json', createdPost)
+          .then(data => {
+            commit('addPost', { ...createdPost, id: data.name })
           })
           .catch(e => {
             console.error(e)
           })
+      },
+      authenticateUser({ commit }, authData) {
+        let authUrl = authData.isLogin
+          ? `https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${process.env.fbAPIKey}`
+          : `https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=${process.env.fbAPIKey}`
+
+        return this.$axios.$post(authUrl, {
+          email: authData.email,
+          password: authData.password,
+          returnSecureToken: true
+        }).then(result => {
+          commit('setToken', result.idToken)
+        })
+          .catch(e => console.error(e))
       }
     },
     getters: {
