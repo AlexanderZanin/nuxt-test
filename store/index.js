@@ -77,7 +77,13 @@ const createStore = () => {
           localStorage.setItem('token', result.idToken)
           localStorage.setItem('tokenExpiration', new Date().getTime() + parseInt(result.expiresIn) * 1000)
           Cookie.set('jwt', result.idToken);
-          Cookie.set('expirationDate', new Date().getTime() + parseInt(result.expiresIn) * 1000);
+          Cookie.set(
+            'expirationDate',
+            new Date().getTime() + parseInt(result.expiresIn) * 1000
+          );
+          return this.$axios.$post('http://localhost:3000/api/track-data', {
+            data: 'Authenticated!'
+          })
         })
           .catch(e => console.error(e))
       },

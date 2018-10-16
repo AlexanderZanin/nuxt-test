@@ -1,3 +1,5 @@
+const bodyParser = require('body-parser')
+
 module.exports = {
   /*
   ** Headers of the page
@@ -56,6 +58,10 @@ module.exports = {
   transition: {
     name: 'fade',
     mode: 'out-in'
-  }
+  },
+  serverMiddleware: [
+    bodyParser.json(),
+    '~/api'
+  ]
 }
 
